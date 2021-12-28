@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:shared_preferences_app/providers/theme_provider.dart';
 
 import 'package:shared_preferences_app/src/shared_prefs/preferencias_usuario.dart';
 import 'package:shared_preferences_app/widgets/menu_widget.dart';
@@ -6,83 +8,71 @@ import 'package:shared_preferences_app/widgets/menu_widget.dart';
 class SettingsPage extends StatefulWidget {
   static const String routName = 'settings';
 
+  const SettingsPage({Key? key}) : super(key: key);
+
   @override
   State<SettingsPage> createState() => _SettingsPageState();
 }
 
 class _SettingsPageState extends State<SettingsPage> {
-  bool? _colorSecundario;
-  int? _genero;
+  // bool isDarkmode = PreferenciasUsuario.isDarkmode;
+  // int gender = PreferenciasUsuario.gender;
   //final String _nombre = 'Pedro';
-
-  late TextEditingController _textController; // late indica a flutter que luego voy a inicializar el controlador
-
-  final prefs = PreferenciasUsuario();
-
-  // Se dispara cuando se inicializa el estado antes del Build
-  @override
-  void initState() {
-    super.initState();
-
-    prefs.ultimaPagina = SettingsPage.routName;
-    _genero = prefs.genero;
-    _colorSecundario = prefs.colorSecundario;
-    _textController = TextEditingController(text: prefs.nombreUsuario);
-  }
-
-  _getSelectedRadio(int? value) {
-    prefs.genero = value ?? 1;
-    _genero = value;
-    setState(() {});
-  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
         appBar: AppBar(
-          title: Text('Ajustes'),
+          title: const Text('Ajustes'),
           centerTitle: true,
-          backgroundColor: (prefs.colorSecundario) ? Colors.teal : Colors.blue,
         ),
-        drawer: MenuWidget(),
+        drawer: const MenuWidget(),
         body: ListView(
           children: <Widget>[
             Container(
-                padding: EdgeInsets.all(5.0),
-                child: Text('Settings', style: TextStyle(fontSize: 45.0, fontWeight: FontWeight.bold))),
-            Divider(thickness: 1.0),
-            SwitchListTile(
-              value: _colorSecundario!,
-              title: Text('Color secundario'),
+                padding: const EdgeInsets.all(5.0),
+                child: const Text('Settings', style: TextStyle(fontSize: 45.0, fontWeight: FontWeight.bold))),
+            const Divider(thickness: 1.0),
+            SwitchListTile.adaptive(
+              value: PreferenciasUsuario.isDarkmode,
+              title: const Text('Darkmode'),
               onChanged: (value) {
-                prefs.colorSecundario = value;
-                _colorSecundario = value;
+                PreferenciasUsuario.isDarkmode = value;
+                final themeProvider = Provider.of<ThemeProvider>(context, listen: false);
+                value ? themeProvider.setDarkMode() : themeProvider.setLightMode();
                 setState(() {});
               },
             ),
-            RadioListTile(
+            RadioListTile<int>(
               value: 1, // Asigna un valor a cada radio list tile
-              title: Text('Masculino'),
-              groupValue: _genero, // Indica cual radio list Tile va a estar checked
-              onChanged: _getSelectedRadio,
+              groupValue: PreferenciasUsuario.gender, // Indica cual radio list Tile va a estar checked
+              title: const Text('Masculino'),
+              onChanged: (value) {
+                PreferenciasUsuario.gender = value ?? 1;
+                setState(() {});
+              },
             ),
-            RadioListTile(
+            RadioListTile<int>(
               value: 2,
-              title: Text('Femenino'),
-              groupValue: _genero,
-              onChanged: _getSelectedRadio,
+              groupValue: PreferenciasUsuario.gender,
+              title: const Text('Femenino'),
+              onChanged: (value) {
+                PreferenciasUsuario.gender = value ?? 2;
+                setState(() {});
+              },
             ),
-            Divider(thickness: 1.0),
+            const Divider(thickness: 1.0),
             Container(
-              padding: EdgeInsets.symmetric(horizontal: 20.0),
-              child: TextField(
-                controller: _textController,
-                decoration: InputDecoration(
+              padding: const EdgeInsets.symmetric(horizontal: 20.0),
+              child: TextFormField(
+                initialValue: PreferenciasUsuario.name,
+                decoration: const InputDecoration(
                   labelText: 'Nombre',
                   helperText: 'Ingresa tu nombre',
                 ),
                 onChanged: (value) {
-                  prefs.nombreUsuario = value;
+                  PreferenciasUsuario.name = value;
+                  setState(() {});
                 },
               ),
             )
